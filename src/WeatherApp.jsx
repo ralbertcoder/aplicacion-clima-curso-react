@@ -9,6 +9,7 @@ export const WeatherApp = () => {
 
     const [ciudad, setCiudad] = useState('')
     const [dataClima, setDataClima] = useState(null)
+    const [errEnvio, setErrEnvio] = useState('')
 
     const handleCambioCiudad = (e) => {
         setCiudad(e.target.value)
@@ -16,17 +17,29 @@ export const WeatherApp = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault()
-        if (ciudad.length > 0) fetchClima()
-
+        if (ciudad.length > 0) {
+            setDataClima(null)
+            setErrEnvio("")
+            fetchClima()
+        }
     }
 
     const fetchClima = async () => {
         try {
             const response = await fetch(`${urlBase}?q=${ciudad}&appid=${API_KEY}`)
             const data = await response.json()
+            
+            if(response.status === 404){                
+                throw "Esa ciudad no existe, recarga la pagina y digita una ciudad correcta "
+            } else if(response.status != 200) {
+                throw error
+            }
+
             setDataClima(data)
-        } catch (error) {
-            console.log('Ocurrio el siguiente problema: ', error)
+                        
+        } catch (errEnvio) {  
+            console.log(errEnvio)
+            setErrEnvio(errEnvio)
         }
     }
 
@@ -46,7 +59,7 @@ export const WeatherApp = () => {
                 />
                 <button type="submit">Buscar</button>
             </form>
-
+            
             {
                 dataClima && (
                     <div>
@@ -57,13 +70,15 @@ export const WeatherApp = () => {
                         <p>Condicion meteorologica: &nbsp;
                         <span>{dataClima.weather[0].description}</span>
                         </p>
-                        <div className='container'><img src={`https://openweathermap.org/img/wn/${dataClima.weather[0].icon}@2x.png`} /></div>
-                        
-
+                        <div className='container'><img src={`https://openweathermap.org/img/wn/${dataClima.weather[0].icon}@2x.png`} /></div>                        
                     </div>
-                )
-            }
-
+                ) 
+            } 
+            {
+                errEnvio  &&
+                    <span style={{color: "white"}}>{errEnvio}</span>    
+                
+            }           
 
         </div>
     )
